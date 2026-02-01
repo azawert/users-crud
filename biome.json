@@ -1,0 +1,4 @@
+{
+  "extends": ["@arthurrios/biome-config/node"],
+  "javascript": { "parser": { "unsafeParameterDecoratorsEnabled": true } }
+}
