@@ -5,7 +5,7 @@ import User from 'src/user/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from 'src/user/user.service';
 import { ConfigService } from '@nestjs/config';
-import { REFRESH_TOKEN_SECRET_KEY, ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_EXPIRES_IN, ACCESS_TOKEN_EXPIRES_IN } from 'src/common';
+import { ERole, REFRESH_TOKEN_SECRET_KEY, ACCESS_TOKEN_SECRET_KEY, REFRESH_TOKEN_EXPIRES_IN, ACCESS_TOKEN_EXPIRES_IN } from 'src/common';
 
 @Injectable()
 export class AuthService {
@@ -41,12 +41,8 @@ export class AuthService {
 		return token
 	}
 
-	private async createAccessToken(id: number, login: string): Promise<string> {
-		if (!id || !login) {
-			throw new Error('Provide an id or a login')
-		}
-
-		const payload = { sub: id, login }
+	private async createAccessToken(id: number, login: string, role: ERole): Promise<string> {
+		const payload = { sub: id, login, role }
 
 		const token = await this.jwtService.signAsync(payload, { secret: this.configService.get<string>(ACCESS_TOKEN_SECRET_KEY), expiresIn: ACCESS_TOKEN_EXPIRES_IN })
 
@@ -64,12 +60,7 @@ export class AuthService {
 				throw new UnauthorizedException(`Invalid refresh token: ${refreshToken}`)
 			}
 
-			const payload = { sub: user.id, login: user.login }
-
-			const newAccessToken = await this.jwtService.signAsync(payload, {
-				expiresIn: ACCESS_TOKEN_EXPIRES_IN,
-				secret: this.configService.get<string>(ACCESS_TOKEN_SECRET_KEY)
-			})
+			const newAccessToken = await this.createAccessToken(user.id, user.login, user.role)
 
 			return newAccessToken
 		} catch (e) {
@@ -83,7 +74,7 @@ export class AuthService {
 
 			const user = await this.validateUser(login, password)
 
-			const [accessToken, refreshToken] = await Promise.all([this.createAccessToken(user.id, login), this.createRefreshToken(user.id, login)])
+			const [accessToken, refreshToken] = await Promise.all([this.createAccessToken(user.id, login, user.role), this.createRefreshToken(user.id, login)])
 
 			await this.userService.updateRefreshToken(user.id, refreshToken)
 
@@ -99,15 +90,16 @@ export class AuthService {
 
 	async register(dto: RegisterDto): Promise<TokensDto> {
 		try {
-			const { password, ...rest } = dto
+			const { password, isAdmin, ...rest } = dto
 			const hashPassword = await bcrypt.hash(password, 10)
-			const createdUser = await this.userService.createNewUser({ password: hashPassword, ...rest })
+			const roleToCreate = isAdmin ? ERole.ADMIN : ERole.USER
+			const createdUser = await this.userService.createNewUser({ password: hashPassword, role: roleToCreate, ...rest })
 
 			if (!createdUser) {
 				throw new InternalServerErrorException()
 			}
 
-			const [accessToken, refreshToken] = await Promise.all([this.createAccessToken(createdUser.id, createdUser.login), this.createRefreshToken(createdUser.id, createdUser.login)])
+			const [accessToken, refreshToken] = await Promise.all([this.createAccessToken(createdUser.id, createdUser.login, createdUser.role), this.createRefreshToken(createdUser.id, createdUser.login)])
 
 
 			await this.userService.updateRefreshToken(createdUser.id, refreshToken);

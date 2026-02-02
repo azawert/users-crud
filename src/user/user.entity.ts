@@ -1,4 +1,5 @@
 import { BaseEntity } from 'src/base'
+import { ERole, MAX_DESCRIPTION_LENGTH } from 'src/common'
 import { Column, DeleteDateColumn, Entity } from 'typeorm'
 
 @Entity()
@@ -9,7 +10,7 @@ class User extends BaseEntity {
 	@Column()
 	passwordHash: string
 
-	@Column({ nullable: true, length: 1000, type: 'char' })
+	@Column({ nullable: true, length: MAX_DESCRIPTION_LENGTH, type: 'char' })
 	description: string
 
 	@Column()
@@ -23,6 +24,9 @@ class User extends BaseEntity {
 
 	@DeleteDateColumn({ nullable: true, default: null })
 	deletedAt: Date
+
+	@Column({ enum: ERole, type: 'enum', default: ERole.USER })
+	role: ERole
 }
 
 export default User

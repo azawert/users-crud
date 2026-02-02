@@ -1,10 +1,12 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Query, Req, UseGuards } from "@nestjs/common"
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from "@nestjs/common"
 import { JwtAccessGuard } from 'src/auth/jwt-access.guard'
 import { UserService } from './user.service'
-import { PaginationQueryDto } from 'src/common/common.dto'
-import User from './user.entity'
-import type { Request } from 'express'
-import { UpdateUserDto } from './user.dto'
+import type { PaginationQueryDto } from 'src/common/common.dto'
+import type { UpdateUserDto } from './user.dto'
+import { User } from './user.decorator'
+import { Roles } from 'src/auth/roles.decorator'
+import { ERole } from 'src/common'
+import { RolesGuard } from 'src/auth/roles.guard'
 
 @Controller("user")
 export class UserController {
@@ -12,51 +14,32 @@ export class UserController {
 
 	@UseGuards(JwtAccessGuard)
 	@Get('me')
-	async getMe(@Req() req) {
-		const user = await this.userService.getMe(req.user.id)
-
-		return {
-			login: user?.login,
-			email: user?.email,
-			age: user?.age,
-			description: user?.description
-		}
+	async getMe(@User('id') id: number) {
+		return this.userService.getById(id)
 	}
 
 	@UseGuards(JwtAccessGuard)
 	@Get('all')
 	@HttpCode(HttpStatus.OK)
 	async getAll(@Query() { showDeleted, page, size }: PaginationQueryDto & { showDeleted: boolean }) {
-		console.log(showDeleted)
-		const response = await this.userService.getAllUsers(size, page, showDeleted)
-		response.data = response.data.map(user => ({
-			login: user?.login,
-			email: user?.email,
-			age: user?.age,
-			description: user?.description
-		}))
-		return response
+		return this.userService.getAllUsers(size, page, showDeleted)
+
 	}
 
-	@UseGuards(JwtAccessGuard)
-	@Delete('')
+	@UseGuards(JwtAccessGuard, RolesGuard)
+	@Roles(ERole.ADMIN)
+	@Delete('/:id')
 	@HttpCode(HttpStatus.NO_CONTENT)
-	async deleteMe(@Req() req) {
-		return this.userService.deleteUser(req.user.id)
+	async deleteMe(@Param('id') id: number) {
+		return this.userService.deleteUser(id)
 	}
 
-	@UseGuards(JwtAccessGuard)
-	@Patch('/update-profile')
+	@UseGuards(JwtAccessGuard, RolesGuard)
+	@Roles(ERole.ADMIN)
+	@Patch('/update-profile/:id')
 	@HttpCode(HttpStatus.OK)
-	async updateMe(@Req() req: Request & { user: User }, @Body() body: UpdateUserDto) {
-		const userId = req.user.id
-		const updatedUser = await this.userService.updateUser(userId, body)
+	async updateMe(@Param('id') id: number, @Body() body: UpdateUserDto) {
+		return await this.userService.updateUser(id, body)
 
-		return {
-			login: updatedUser?.login,
-			email: updatedUser?.email,
-			age: updatedUser?.age,
-			description: updatedUser?.description
-		}
 	}
 }

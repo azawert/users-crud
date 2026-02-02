@@ -1,4 +1,4 @@
-import { IsEmail, IsNumber, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNumber, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator';
 import { MAX_DESCRIPTION_LENGTH, MIN_PASSWORD_LENGTH } from 'src/common';
 
 export class RegisterDto {
@@ -18,6 +18,10 @@ export class RegisterDto {
 	@IsString()
 	@MaxLength(MAX_DESCRIPTION_LENGTH)
 	description: string
+
+	@IsOptional()
+	@IsBoolean()
+	isAdmin: boolean = false
 }
 
 export class AuthenticationDto {

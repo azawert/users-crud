@@ -24,6 +24,5 @@ import { PassportModule } from '@nestjs/passport';
     inject: [ConfigService]
   }),
   ],
-
 })
 export class AuthModule { }

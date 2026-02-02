@@ -34,10 +34,6 @@ export class UserService {
 		return this.userRepository.updateToken(userId, token)
 	}
 
-	async getMe(id: number) {
-		return this.userRepository.findUserById(id)
-	}
-
 	async getAllUsers(limit: number, page: number, includeDeleted: boolean = false): Promise<PaginatedResponse<Partial<User>>> {
 		const response = await this.userRepository.findAllUsers(limit, page, includeDeleted)
 		const [users, total] = response

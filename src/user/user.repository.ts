@@ -5,6 +5,20 @@ import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { BadGatewayException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { IUserRepository } from './user-repository.interface';
 
+const propertiesToSelect: Record<keyof User, boolean> = {
+	age: true,
+	createdAt: false,
+	deletedAt: false,
+	description: true,
+	email: true,
+	id: true,
+	login: true,
+	refreshToken: true,
+	passwordHash: true,
+	role: true,
+	updatedAt: false
+}
+
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
 
@@ -20,7 +34,8 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 			return this.userRepository().findOne({
 				where: {
 					id
-				}
+				},
+				select: propertiesToSelect,
 			})
 		} catch (e) {
 			throw new BadGatewayException(e)
@@ -29,7 +44,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 
 	async findUserByLogin(login: string): Promise<User | null> {
 		try {
-			return this.userRepository().findOne({ where: { login } })
+			return this.userRepository().findOne({ where: { login }, select: propertiesToSelect })
 		} catch (e) {
 			throw new BadGatewayException(e)
 		}
@@ -38,7 +53,6 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 	async createUser(data: CreateUserDto): Promise<User> {
 		const { password, ...rest } = data
 		return this.userRepository().save({ passwordHash: password, ...rest })
-
 	}
 
 	async updateToken(userId: number, token: string): Promise<{ ok: boolean }> {
@@ -58,7 +72,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 
 	async findUserByRefreshToken(refreshToken: string): Promise<User | null> {
 		try {
-			return this.userRepository().findOneBy({ refreshToken })
+			return this.userRepository().findOne({ where: { refreshToken }, select: propertiesToSelect })
 		} catch (e) {
 			throw new BadGatewayException(e)
 		}
@@ -70,7 +84,8 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 			return this.userRepository().findAndCount({
 				take: limit,
 				skip,
-				withDeleted: includeDeleted
+				withDeleted: includeDeleted,
+				select: propertiesToSelect
 			})
 		} catch (e) {
 			console.error(e)
@@ -79,23 +94,21 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 	}
 
 	async updateUser(userId: number, data: UpdateUserDto): Promise<User | null> {
+		const { ...updateData } = { ...data };
 		try {
-			await this.userRepository().update({ id: userId }, data)
+			await this.userRepository().update({ id: userId }, updateData)
 
 			const newUser = await this.findUserById(userId)
 
 			return newUser
 		}
 		catch (e) {
+			console.log(e)
 			throw new InternalServerErrorException(e)
 		}
 	}
 
 	async deleteUser(userId: number): Promise<void> {
-		try {
-			await this.userRepository().softDelete({ id: userId })
-		} catch (e) {
-			throw new InternalServerErrorException(e)
-		}
+		await this.userRepository().softDelete({ id: userId })
 	}
 }
