@@ -95,10 +95,6 @@ export class AuthService {
 			const roleToCreate = isAdmin ? ERole.ADMIN : ERole.USER
 			const createdUser = await this.userService.createNewUser({ password: hashPassword, role: roleToCreate, ...rest })
 
-			if (!createdUser) {
-				throw new InternalServerErrorException()
-			}
-
 			const [accessToken, refreshToken] = await Promise.all([this.createAccessToken(createdUser.id, createdUser.login, createdUser.role), this.createRefreshToken(createdUser.id, createdUser.login)])
 
 

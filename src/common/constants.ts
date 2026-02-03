@@ -8,3 +8,6 @@ export const ACCESS_TOKEN_EXPIRES_IN = '45m'
 export const REFRESH_TOKEN_EXPIRES_IN = '7d'
 
 export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
+
+export const JWT_REFRESH_STRATEGY_NAME = 'jwt-refresh'
+export const JWT_ACCESS_STRATEGY_NAME = 'jwt-access'
