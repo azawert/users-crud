@@ -22,7 +22,7 @@ import { JwtRefreshStrategy } from './jwt-refresh.strategy'
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         global: true,
-        secret: configService.get(ACCESS_TOKEN_SECRET_KEY)!,
+        secret: configService.getOrThrow(ACCESS_TOKEN_SECRET_KEY),
         signOptions: { expiresIn: '40m' },
       }),
     }),
