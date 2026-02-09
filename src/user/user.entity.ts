@@ -4,29 +4,29 @@ import { Column, DeleteDateColumn, Entity } from 'typeorm'
 
 @Entity()
 class User extends BaseEntity {
-	@Column()
-	login: string
+  @Column()
+  login: string
 
-	@Column()
-	passwordHash: string
+  @Column()
+  passwordHash: string
 
-	@Column({ nullable: true, length: MAX_DESCRIPTION_LENGTH, type: 'char' })
-	description: string
+  @Column({ length: MAX_DESCRIPTION_LENGTH, nullable: true, type: 'char' })
+  description: string
 
-	@Column()
-	age: number
+  @Column()
+  age: number
 
-	@Column()
-	email: string
+  @Column()
+  email: string
 
-	@Column({ nullable: true })
-	refreshToken: string
+  @Column({ nullable: true })
+  refreshToken: string
 
-	@DeleteDateColumn({ nullable: true, default: null })
-	deletedAt: Date
+  @DeleteDateColumn({ default: null, nullable: true })
+  deletedAt: Date
 
-	@Column({ enum: ERole, type: 'enum', default: ERole.USER })
-	role: ERole
+  @Column({ default: ERole.USER, enum: ERole, type: 'enum' })
+  role: ERole
 }
 
 export default User
