@@ -10,7 +10,7 @@ import { UserService } from 'src/user/user.service'
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_STRATEGY_NAME) {
   constructor(
     private readonly userService: UserService,
-    private readonly configService: ConfigService,
+    readonly configService: ConfigService,
   ) {
     super({
       ignoreExpiration: false,
@@ -22,10 +22,10 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_S
         },
       ]),
       passReqToCallback: true,
-      secretOrKey: configService.get(REFRESH_TOKEN_SECRET_KEY)!,
+      secretOrKey: configService.getOrThrow(REFRESH_TOKEN_SECRET_KEY),
     })
   }
-  async validate(req: Request, payload: any): Promise<User> {
+  async validate(req: Request, payload: { sub: number }): Promise<User> {
     const refreshToken = req.headers.cookie?.split('=')[1]
 
     if (!refreshToken) {

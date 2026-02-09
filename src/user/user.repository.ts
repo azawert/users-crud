@@ -65,7 +65,7 @@ export class UserRepository extends BaseRepository implements IUserRepository {
       return {
         ok: true,
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         ok: false,
       }
@@ -90,7 +90,6 @@ export class UserRepository extends BaseRepository implements IUserRepository {
         withDeleted: includeDeleted,
       })
     } catch (e) {
-      console.error(e)
       throw new InternalServerErrorException(e)
     }
   }
@@ -104,7 +103,6 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 
       return newUser
     } catch (e) {
-      console.log(e)
       throw new InternalServerErrorException(e)
     }
   }
