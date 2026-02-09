@@ -1,53 +1,53 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from "@nestjs/common"
-import { AuthService } from './auth.service';
-import { AuthenticationDto, RegisterDto } from './auth.dto';
-import type { Response } from 'express';
-import { JwtRefreshGuard } from './jwt-refresh.guard';
-import { COOKIE_MAX_AGE } from 'src/common';
-import { User } from 'src/user/user.decorator';
+import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common'
+import type { Response } from 'express'
+import { COOKIE_MAX_AGE } from 'src/common'
+import { User } from 'src/user/user.decorator'
+import { AuthenticationDto, RegisterDto } from './auth.dto'
+import { AuthService } from './auth.service'
+import { JwtRefreshGuard } from './jwt-refresh.guard'
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
-	constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
-	@Post('login')
-	@HttpCode(HttpStatus.OK)
-	async login(@Body() req: AuthenticationDto, @Res() res: Response) {
-		const tokens = await this.authService.login(req)
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  async login(@Body() req: AuthenticationDto, @Res() res: Response) {
+    const tokens = await this.authService.login(req)
 
-		res.cookie('refreshToken', tokens.refreshToken, {
-			httpOnly: true,
-			maxAge: COOKIE_MAX_AGE,
-		})
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      maxAge: COOKIE_MAX_AGE,
+    })
 
-		return res.json({
-			accessToken: tokens.accessToken
-		})
-	}
+    return res.json({
+      accessToken: tokens.accessToken,
+    })
+  }
 
-	@Post('registration')
-	@HttpCode(HttpStatus.CREATED)
-	async register(@Body() req: RegisterDto, @Res() res: Response) {
-		const tokens = await this.authService.register(req)
+  @Post('registration')
+  @HttpCode(HttpStatus.CREATED)
+  async register(@Body() req: RegisterDto, @Res() res: Response) {
+    const tokens = await this.authService.register(req)
 
-		res.cookie('refreshToken', tokens.refreshToken, {
-			httpOnly: true,
-			maxAge: COOKIE_MAX_AGE,
-		})
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      maxAge: COOKIE_MAX_AGE,
+    })
 
-		return res.json({
-			accessToken: tokens.accessToken
-		})
-	}
+    return res.json({
+      accessToken: tokens.accessToken,
+    })
+  }
 
-	@UseGuards(JwtRefreshGuard)
-	@Post('refresh')
-	@HttpCode(HttpStatus.OK)
-	async refreshToken(@User('refreshToken') refreshToken: string) {
-		const newAccessToken = await this.authService.refreshAccessToken(refreshToken)
+  @UseGuards(JwtRefreshGuard)
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@User('refreshToken') refreshToken: string) {
+    const newAccessToken = await this.authService.refreshAccessToken(refreshToken)
 
-		return {
-			accessToken: newAccessToken
-		}
-	}
+    return {
+      accessToken: newAccessToken,
+    }
+  }
 }
