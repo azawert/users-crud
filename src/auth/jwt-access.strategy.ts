@@ -23,6 +23,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, JWT_ACCESS_STR
     if (!user) {
       throw new UnauthorizedException()
     }
+    var a = 1
     return user
   }
 }
