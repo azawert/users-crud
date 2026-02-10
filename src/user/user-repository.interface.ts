@@ -10,4 +10,5 @@ export abstract class IUserRepository {
   abstract findAllUsers(limit: number, page: number, includeDeleted?: boolean): Promise<[User[], number]>
   abstract updateUser(userId: number, data: UpdateUserDto): Promise<User | null>
   abstract deleteUser(userId: number): Promise<void>
+  abstract getUsersWithAvatars(): Promise<User[] | undefined>
 }

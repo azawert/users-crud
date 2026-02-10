@@ -40,4 +40,11 @@ export class UserController {
   async updateMe(@Param('id') id: number, @Body() body: UpdateUserDto) {
     return await this.userService.updateUser(id, body)
   }
+
+  @UseGuards(JwtAccessGuard)
+  @Get('/active')
+  @HttpCode(HttpStatus.OK)
+  async getMostActiveUsers() {
+    return await this.userService.getUsersWithAvatar()
+  }
 }

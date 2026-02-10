@@ -1,5 +1,7 @@
-import { BadGatewayException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadGatewayException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
 import { BaseRepository } from 'src/base'
+import { ACTIVE_USERS_PHOTO_COUNT } from 'src/common/constants'
+import { Photo } from 'src/photo/photo.entity'
 import { DataSource, EntityManager, Repository } from 'typeorm'
 import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
@@ -22,6 +24,7 @@ const propertiesToSelect: Record<keyof User, boolean> = {
 
 @Injectable()
 export class UserRepository extends BaseRepository implements IUserRepository {
+  private readonly logger = new Logger(UserRepository.name)
   constructor(protected readonly dataSource: DataSource) {
     super(dataSource)
   }
@@ -110,5 +113,37 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 
   async deleteUser(userId: number): Promise<void> {
     await this.userRepository().softDelete({ id: userId })
+  }
+
+  async getUsersWithAvatars(): Promise<User[] | undefined> {
+    try {
+      const users = await this.userRepository()
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.photos', 'photo')
+        .where(qb => {
+          const subQuery = qb
+            .subQuery()
+            .select('p.userId')
+            .from(Photo, 'p')
+            .groupBy('p.userId')
+            .having('COUNT(p.id) > :count')
+            .getQuery()
+
+          return 'user.id IN (' + subQuery + ')'
+        })
+        .setParameter('count', ACTIVE_USERS_PHOTO_COUNT)
+        .andWhere('user.description IS NOT NULL')
+        .getMany()
+
+      return users
+    } catch (e) {
+      this.logger.error(`Error while fetching users with avatar. Error: ${e}`)
+      if (e instanceof HttpException) {
+        const status = e.getStatus()
+        const message = e.message
+
+        throw new HttpException(message, status)
+      }
+    }
   }
 }

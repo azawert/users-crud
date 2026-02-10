@@ -57,4 +57,8 @@ export class UserService {
   async updateUser(id: number, data: UpdateUserDto) {
     return this.userRepository.updateUser(id, data)
   }
+
+  async getUsersWithAvatar() {
+    return this.userRepository.getUsersWithAvatars()
+  }
 }

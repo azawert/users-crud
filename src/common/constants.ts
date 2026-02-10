@@ -13,3 +13,4 @@ export const JWT_REFRESH_STRATEGY_NAME = 'jwt-refresh'
 export const JWT_ACCESS_STRATEGY_NAME = 'jwt-access'
 
 export const ACCEPTED_FILE_REGEX = /^image\/(png|jpeg)$/
+export const ACTIVE_USERS_PHOTO_COUNT = 2
