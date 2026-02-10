@@ -6,10 +6,10 @@ import { UserModule } from 'src/user/user.module'
 import { ACCESS_TOKEN_SECRET_KEY } from './../common/constants'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
-import { JwtAccessGuard } from './jwt-access.guard'
-import { JwtAccessStrategy } from './jwt-access.strategy'
-import { JwtRefreshGuard } from './jwt-refresh.guard'
-import { JwtRefreshStrategy } from './jwt-refresh.strategy'
+import { JwtAccessGuard } from './guards/jwt-access.guard'
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
+import { JwtAccessStrategy } from './strategies/jwt-access.strategy'
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy'
 
 @Module({
   controllers: [AuthController],

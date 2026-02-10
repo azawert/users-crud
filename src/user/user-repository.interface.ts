@@ -1,4 +1,4 @@
-import { CreateUserDto, UpdateUserDto } from './user.dto'
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 
 export abstract class IUserRepository {

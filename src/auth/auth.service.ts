@@ -11,7 +11,7 @@ import {
 } from 'src/common'
 import User from 'src/user/user.entity'
 import { UserService } from 'src/user/user.service'
-import { AuthenticationDto, RegisterDto, TokensDto } from './auth.dto'
+import { AuthenticationDto, RegisterDto, TokensDto } from './dto/auth.dto'
 
 @Injectable()
 export class AuthService {

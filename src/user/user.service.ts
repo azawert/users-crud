@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { PaginatedResponse } from 'src/common/common.dto'
-import { CreateUserDto, UpdateUserDto } from './user.dto'
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 

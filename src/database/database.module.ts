@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { Photo } from 'src/photo/photo.entity'
 import User from 'src/user/user.entity'
 
 const defaultRadix = 10
@@ -13,7 +14,7 @@ const defaultRadix = 10
       useFactory: (configService: ConfigService) => {
         return {
           database: configService.get('DB_NAME'),
-          entities: [User],
+          entities: [User, Photo],
           host: configService.get<string>('DB_HOST'),
           password: configService.get('DB_PASSWORD'),
           port: parseInt(configService.get<string>('DB_PORT') || '', defaultRadix),

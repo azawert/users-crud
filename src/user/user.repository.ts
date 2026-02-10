@@ -1,7 +1,7 @@
 import { BadGatewayException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { BaseRepository } from 'src/base'
 import { DataSource, EntityManager, Repository } from 'typeorm'
-import { CreateUserDto, UpdateUserDto } from './user.dto'
+import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 
@@ -14,6 +14,7 @@ const propertiesToSelect: Record<keyof User, boolean> = {
   id: true,
   login: true,
   passwordHash: true,
+  photos: true,
   refreshToken: true,
   role: true,
   updatedAt: false,

@@ -1,10 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common'
 import type { Response } from 'express'
 import { COOKIE_MAX_AGE } from 'src/common'
-import { User } from 'src/user/user.decorator'
-import { AuthenticationDto, RegisterDto } from './auth.dto'
+import { User } from 'src/user/decorator/user.decorator'
 import { AuthService } from './auth.service'
-import { JwtRefreshGuard } from './jwt-refresh.guard'
+import { AuthenticationDto, RegisterDto } from './dto/auth.dto'
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard'
 
 @Controller('auth')
 export class AuthController {

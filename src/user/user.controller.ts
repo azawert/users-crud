@@ -1,11 +1,11 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common'
-import { JwtAccessGuard } from 'src/auth/jwt-access.guard'
-import { Roles } from 'src/auth/roles.decorator'
-import { RolesGuard } from 'src/auth/roles.guard'
+import { Roles } from 'src/auth/decorators/roles.decorator'
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard'
+import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { ERole } from 'src/common'
 import type { PaginationQueryDto } from 'src/common/common.dto'
-import { User } from './user.decorator'
-import type { UpdateUserDto } from './user.dto'
+import { User } from './decorator/user.decorator'
+import type { UpdateUserDto } from './dto/user.dto'
 import { UserService } from './user.service'
 
 @Controller('user')

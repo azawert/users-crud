@@ -1,6 +1,7 @@
 import { BaseEntity } from 'src/base'
 import { ERole, MAX_DESCRIPTION_LENGTH } from 'src/common'
-import { Column, DeleteDateColumn, Entity } from 'typeorm'
+import { Photo } from 'src/photo/photo.entity'
+import { Column, DeleteDateColumn, Entity, OneToMany } from 'typeorm'
 
 @Entity()
 class User extends BaseEntity {
@@ -27,6 +28,13 @@ class User extends BaseEntity {
 
   @Column({ default: ERole.USER, enum: ERole, type: 'enum' })
   role: ERole
+
+  @OneToMany(
+    () => Photo,
+    photo => photo.user,
+    { cascade: true },
+  )
+  photos: Photo[]
 }
 
 export default User
