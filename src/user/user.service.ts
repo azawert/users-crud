@@ -1,56 +1,119 @@
-import { ConflictException, Injectable } from "@nestjs/common"
-import { CreateUserDto, UpdateUserDto } from './user.dto';
-import { IUserRepository } from './user-repository.interface';
-import { PaginatedResponse } from 'src/common/common.dto';
-import User from './user.entity';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import Decimal from 'decimal.js'
+import { DEFAULT_SCALE } from 'src/common'
+import { PaginatedResponse } from 'src/common/common.dto'
+import { RedisService } from 'src/providers/redis/redis.service'
+import { CreateUserDto, MostActiveUserRequestDto, SendMoneyToUserRequestDto, UpdateUserDto } from './dto/user.dto'
+import User from './user.entity'
+import { IUserRepository } from './user-repository.interface'
 
 @Injectable()
 export class UserService {
-	constructor(private readonly userRepository: IUserRepository) { }
+  private readonly logger: Logger = new Logger(UserService.name)
 
-	async getByLogin(login: string) {
-		return this.userRepository.findUserByLogin(login)
-	}
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
-	async getById(id: number) {
-		return this.userRepository.findUserById(id)
-	}
+  async getByLogin(login: string) {
+    return this.userRepository.findUserByLogin(login)
+  }
 
-	async getByRefreshToken(refreshToken: string) {
-		return this.userRepository.findUserByRefreshToken(refreshToken)
-	}
+  async getById(id: number) {
+    const userFromCache = await this.redisService.get<User>(`${id}`)
+    if (userFromCache) {
+      return userFromCache
+    }
+    const data = await this.userRepository.findUserById(id)
+    await this.redisService.set(`${id}`, data)
+    return data
+  }
 
-	async createNewUser(data: CreateUserDto) {
-		const existingUser = await this.getByLogin(data.login)
+  async getByRefreshToken(refreshToken: string) {
+    return this.userRepository.findUserByRefreshToken(refreshToken)
+  }
 
-		if (existingUser) {
-			throw new ConflictException()
-		}
+  async createNewUser(data: CreateUserDto) {
+    const existingUser = await this.getByLogin(data.login)
 
-		return this.userRepository.createUser(data)
-	}
+    if (existingUser) {
+      throw new ConflictException()
+    }
 
-	async updateRefreshToken(userId: number, token: string) {
-		return this.userRepository.updateToken(userId, token)
-	}
+    const createdUser = await this.userRepository.createUser(data)
+    await this.redisService.set(`${createdUser.id}`, createdUser)
 
-	async getAllUsers(limit: number, page: number, includeDeleted: boolean = false): Promise<PaginatedResponse<Partial<User>>> {
-		const response = await this.userRepository.findAllUsers(limit, page, includeDeleted)
-		const [users, total] = response
+    return createdUser
+  }
 
-		return {
-			currentPage: page,
-			data: users,
-			limit,
-			totalCount: total
-		}
-	}
+  async updateRefreshToken(userId: number, token: string) {
+    return this.userRepository.updateToken(userId, token)
+  }
 
-	async deleteUser(id: number) {
-		return this.userRepository.deleteUser(id)
-	}
+  async getAllUsers(
+    limit: number,
+    page: number,
+    includeDeleted: boolean = false,
+  ): Promise<PaginatedResponse<Partial<User>>> {
+    const response = await this.userRepository.findAllUsers(limit, page, includeDeleted)
+    const [users, total] = response
 
-	async updateUser(id: number, data: UpdateUserDto) {
-		return this.userRepository.updateUser(id, data)
-	}
+    return {
+      currentPage: page,
+      data: users,
+      limit,
+      totalCount: total,
+    }
+  }
+
+  async deleteUser(id: number) {
+    await this.redisService.delete(`${id}`)
+    return this.userRepository.deleteUser(id)
+  }
+
+  async updateUser(id: number, data: UpdateUserDto) {
+    return this.userRepository.updateUser(id, data)
+  }
+
+  async getMostActiveUsers(params: MostActiveUserRequestDto) {
+    const keyForRedis = `users:active:${params.minAge}:${params.maxAge}`
+    const cachedValue = await this.redisService.get(keyForRedis)
+    if (cachedValue !== null) {
+      return cachedValue
+    }
+
+    const response = await this.userRepository.getMostActiveUsers(params)
+    if (response) {
+      await this.redisService.set(keyForRedis, response)
+    }
+
+    return response
+  }
+
+  async sendMoneyToUser(dto: SendMoneyToUserRequestDto) {
+    const { amount, payeeId, payerId } = dto
+    if (payerId === payeeId) {
+      throw new BadRequestException('Payer and payee must be different users')
+    }
+
+    const transferAmount = this.toDecimal(amount)
+
+    this.logger.log(`Extracting users with ids: [${payerId}, ${payeeId}]`)
+    const [payer, payee] = await Promise.all([this.getById(payerId), this.getById(payeeId)])
+
+    if (!payer || !payee) {
+      this.logger.error('Couldnt extract from db users with specified ids')
+      throw new NotFoundException()
+    }
+
+    this.logger.log('Start transferring money with row-level locks')
+    await this.userRepository.transferBalance(payerId, payeeId, transferAmount)
+
+    await Promise.all([this.redisService.delete(`${payerId}`), this.redisService.delete(`${payeeId}`)])
+  }
+
+  private toDecimal(value: Decimal.Value): Decimal {
+    return new Decimal(value).toDecimalPlaces(DEFAULT_SCALE)
+  }
 }
