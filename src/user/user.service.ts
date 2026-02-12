@@ -1,12 +1,16 @@
-import { ConflictException, Injectable } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common'
+import Decimal from 'decimal.js'
 import { PaginatedResponse } from 'src/common/common.dto'
 import { RedisService } from 'src/providers/redis/redis.service'
-import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
+import { Transactional } from 'typeorm-transactional'
+import { CreateUserDto, MostActiveUserRequestDto, SendMoneyToUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 
 @Injectable()
 export class UserService {
+  private readonly logger: Logger = new Logger(UserService.name)
+
   constructor(
     private readonly userRepository: IUserRepository,
     private readonly redisService: RedisService,
@@ -85,5 +89,35 @@ export class UserService {
     }
 
     return response
+  }
+
+  @Transactional()
+  async sendMoneyToUser(dto: SendMoneyToUserRequestDto) {
+    const { amount, payeeId, payerId } = dto
+
+    this.logger.log(`Extracting users with ids: [${payerId}, ${payeeId}]`)
+    const [payer, payee] = await Promise.all([this.getById(payerId), this.getById(payeeId)])
+
+    if (!payer || !payee) {
+      this.logger.error('Couldnt extract from db users with specified ids')
+      throw new NotFoundException()
+    }
+    this.logger.log('Checking that payer have needed amount of money')
+    const isTransferPossible = this.isTransferPossible(payer.balance, amount)
+
+    if (!isTransferPossible) {
+      this.logger.error(`Payer dont have much balance. PayerId: ${payerId}`)
+      throw new BadRequestException()
+    }
+
+    const newPayerAmount = payer.balance.minus(amount)
+    const newPayeeAmount = payee.balance.plus(amount)
+
+    await this.userRepository.updateBalance(payerId, newPayerAmount)
+    await this.userRepository.updateBalance(payeeId, newPayeeAmount)
+  }
+
+  private isTransferPossible(oldAmount: Decimal, newAmount: Decimal): boolean {
+    return oldAmount.minus(newAmount).toNumber() >= 0
   }
 }

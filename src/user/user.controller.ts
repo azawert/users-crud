@@ -1,11 +1,23 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common'
 import { Roles } from 'src/auth/decorators/roles.decorator'
 import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard'
 import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { ERole } from 'src/common'
 import type { PaginationQueryDto } from 'src/common/common.dto'
 import { User } from './decorator/user.decorator'
-import type { MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
+import type { MostActiveUserRequestDto, SendMoneyToUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import TUser from './user.entity'
 import { UserService } from './user.service'
 
@@ -46,6 +58,13 @@ export class UserController {
   @Get('/active')
   @HttpCode(HttpStatus.OK)
   async getMostActiveUsers(@Query() query: MostActiveUserRequestDto) {
-    return await this.userService.getMostActiveUsers(query)
+    return this.userService.getMostActiveUsers(query)
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Post('/send-money')
+  @HttpCode(HttpStatus.OK)
+  async sendMoney(@Body() dto: SendMoneyToUserRequestDto) {
+    return this.userService.sendMoneyToUser(dto)
   }
 }

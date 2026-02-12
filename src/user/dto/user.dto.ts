@@ -1,6 +1,16 @@
 import { OmitType, PartialType } from '@nestjs/swagger'
 import { Type } from 'class-transformer'
-import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator'
+import {
+  IsEmail,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsStrongPassword,
+  MaxLength,
+} from 'class-validator'
+import Decimal from 'decimal.js'
 import { ERole, MAX_DESCRIPTION_LENGTH, MIN_PASSWORD_LENGTH } from 'src/common'
 
 export class CreateUserDto {
@@ -37,4 +47,15 @@ export class MostActiveUserRequestDto {
   @Type(() => Number)
   @IsNumber()
   maxAge: number = 50
+}
+
+export class SendMoneyToUserRequestDto {
+  @IsNumber()
+  payerId: number
+
+  @IsNumber()
+  payeeId: number
+
+  @IsPositive()
+  amount: Decimal
 }

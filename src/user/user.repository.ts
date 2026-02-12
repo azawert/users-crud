@@ -1,4 +1,5 @@
 import { BadGatewayException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import Decimal from 'decimal.js'
 import { BaseRepository } from 'src/base'
 import { ACTIVE_USERS_PHOTO_COUNT } from 'src/common/constants'
 import { Photo } from 'src/photo/photo.entity'
@@ -9,6 +10,7 @@ import { IUserRepository } from './user-repository.interface'
 
 const propertiesToSelect: Record<keyof User, boolean> = {
   age: true,
+  balance: true,
   createdAt: false,
   deletedAt: false,
   description: true,
@@ -147,6 +149,17 @@ export class UserRepository extends BaseRepository implements IUserRepository {
 
         throw new HttpException(message, status)
       }
+    }
+  }
+
+  async updateBalance(userId: number, newAmount: Decimal): Promise<void> {
+    try {
+      this.logger.log(`Startind updating balance on user: ${userId}`)
+      await this.userRepository().update({ id: userId }, { balance: newAmount })
+      this.logger.log(`User balance updated. new balance is: ${newAmount}`)
+    } catch (e) {
+      this.logger.error('Error while updating balance', e)
+      throw new InternalServerErrorException(e)
     }
   }
 }

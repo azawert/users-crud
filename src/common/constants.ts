@@ -14,3 +14,6 @@ export const JWT_ACCESS_STRATEGY_NAME = 'jwt-access'
 
 export const ACCEPTED_FILE_REGEX = /^image\/(png|jpeg)$/
 export const ACTIVE_USERS_PHOTO_COUNT = 2
+
+export const DEFAULT_PRECISION = 10
+export const DEFAULT_SCALE = 2
