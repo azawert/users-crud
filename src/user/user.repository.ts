@@ -1,4 +1,12 @@
-import { BadGatewayException, HttpException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import {
+  BadGatewayException,
+  BadRequestException,
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
 import Decimal from 'decimal.js'
 import { BaseRepository } from 'src/base'
 import { ACTIVE_USERS_PHOTO_COUNT } from 'src/common/constants'
@@ -152,13 +160,62 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     }
   }
 
-  async updateBalance(userId: number, newAmount: Decimal): Promise<void> {
+  async transferBalance(payerId: number, payeeId: number, amount: Decimal): Promise<void> {
     try {
-      this.logger.log(`Startind updating balance on user: ${userId}`)
-      await this.userRepository().update({ id: userId }, { balance: newAmount })
-      this.logger.log(`User balance updated. new balance is: ${newAmount}`)
+      await this.dataSource.transaction(async manager => {
+        const [firstId, secondId] = payerId < payeeId ? [payerId, payeeId] : [payeeId, payerId]
+        const lockedUsers = await this.userRepository(manager)
+          .createQueryBuilder('user')
+          .setLock('pessimistic_write')
+          .where('user.id IN (:...ids)', { ids: [firstId, secondId] })
+          .getMany()
+
+        if (lockedUsers.length !== 2) {
+          throw new NotFoundException('Payer or payee user not found')
+        }
+
+        const firstUser = lockedUsers.find(user => user.id === firstId)
+        const secondUser = lockedUsers.find(user => user.id === secondId)
+        if (!firstUser || !secondUser) {
+          throw new InternalServerErrorException('Locked users mismatch during transfer')
+        }
+
+        const payer = payerId === firstId ? firstUser : secondUser
+        const payee = payeeId === firstId ? firstUser : secondUser
+        const payerBalance = new Decimal(payer.balance)
+        const payeeBalance = new Decimal(payee.balance)
+
+        if (payerBalance.lessThan(amount)) {
+          throw new BadRequestException('Insufficient payer balance')
+        }
+
+        payer.balance = payerBalance.minus(amount)
+        payee.balance = payeeBalance.plus(amount)
+
+        await this.userRepository(manager).save([payer, payee])
+      })
     } catch (e) {
-      this.logger.error('Error while updating balance', e)
+      this.logger.error('Error while transferring balance', e)
+      if (e instanceof HttpException) {
+        throw e
+      }
+      throw new InternalServerErrorException(e)
+    }
+  }
+
+  async resetAllBalances(): Promise<number> {
+    try {
+      this.logger.log('Starting bulk balance reset for all users')
+      const result = await this.userRepository()
+        .createQueryBuilder()
+        .update(User)
+        .set({ balance: new Decimal(0) })
+        .execute()
+      const affectedRows = result.affected ?? 0
+      this.logger.log(`Bulk balance reset finished. Affected users count: ${affectedRows}`)
+      return affectedRows
+    } catch (e) {
+      this.logger.error('Error while resetting balances for all users', e)
       throw new InternalServerErrorException(e)
     }
   }

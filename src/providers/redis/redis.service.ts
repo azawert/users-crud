@@ -30,7 +30,7 @@ export class RedisService {
         throw e
       }
     }
-    this.logger.error(`Cache miss. Missed key: ${key}`)
+    this.logger.debug(`Cache miss. Missed key: ${key}`)
     return null
   }
 

@@ -10,7 +10,6 @@ import {
   IsStrongPassword,
   MaxLength,
 } from 'class-validator'
-import Decimal from 'decimal.js'
 import { ERole, MAX_DESCRIPTION_LENGTH, MIN_PASSWORD_LENGTH } from 'src/common'
 
 export class CreateUserDto {
@@ -50,12 +49,20 @@ export class MostActiveUserRequestDto {
 }
 
 export class SendMoneyToUserRequestDto {
+  @Type(() => Number)
   @IsNumber()
   payerId: number
 
+  @Type(() => Number)
   @IsNumber()
   payeeId: number
 
+  @Type(() => Number)
+  @IsNumber({
+    allowInfinity: false,
+    allowNaN: false,
+    maxDecimalPlaces: 2,
+  })
   @IsPositive()
-  amount: Decimal
+  amount: number
 }

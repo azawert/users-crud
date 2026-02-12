@@ -1,8 +1,8 @@
 import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common'
 import Decimal from 'decimal.js'
+import { DEFAULT_SCALE } from 'src/common'
 import { PaginatedResponse } from 'src/common/common.dto'
 import { RedisService } from 'src/providers/redis/redis.service'
-import { Transactional } from 'typeorm-transactional'
 import { CreateUserDto, MostActiveUserRequestDto, SendMoneyToUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
@@ -77,7 +77,7 @@ export class UserService {
   }
 
   async getMostActiveUsers(params: MostActiveUserRequestDto) {
-    const keyForRedis = 'users:active'
+    const keyForRedis = `users:active:${params.minAge}:${params.maxAge}`
     const cachedValue = await this.redisService.get(keyForRedis)
     if (cachedValue !== null) {
       return cachedValue
@@ -91,9 +91,13 @@ export class UserService {
     return response
   }
 
-  @Transactional()
   async sendMoneyToUser(dto: SendMoneyToUserRequestDto) {
     const { amount, payeeId, payerId } = dto
+    if (payerId === payeeId) {
+      throw new BadRequestException('Payer and payee must be different users')
+    }
+
+    const transferAmount = this.toDecimal(amount)
 
     this.logger.log(`Extracting users with ids: [${payerId}, ${payeeId}]`)
     const [payer, payee] = await Promise.all([this.getById(payerId), this.getById(payeeId)])
@@ -102,22 +106,14 @@ export class UserService {
       this.logger.error('Couldnt extract from db users with specified ids')
       throw new NotFoundException()
     }
-    this.logger.log('Checking that payer have needed amount of money')
-    const isTransferPossible = this.isTransferPossible(payer.balance, amount)
 
-    if (!isTransferPossible) {
-      this.logger.error(`Payer dont have much balance. PayerId: ${payerId}`)
-      throw new BadRequestException()
-    }
+    this.logger.log('Start transferring money with row-level locks')
+    await this.userRepository.transferBalance(payerId, payeeId, transferAmount)
 
-    const newPayerAmount = payer.balance.minus(amount)
-    const newPayeeAmount = payee.balance.plus(amount)
-
-    await this.userRepository.updateBalance(payerId, newPayerAmount)
-    await this.userRepository.updateBalance(payeeId, newPayeeAmount)
+    await Promise.all([this.redisService.delete(`${payerId}`), this.redisService.delete(`${payeeId}`)])
   }
 
-  private isTransferPossible(oldAmount: Decimal, newAmount: Decimal): boolean {
-    return oldAmount.minus(newAmount).toNumber() >= 0
+  private toDecimal(value: Decimal.Value): Decimal {
+    return new Decimal(value).toDecimalPlaces(DEFAULT_SCALE)
   }
 }

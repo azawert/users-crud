@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js'
-import { CreateUserDto, MostActiveUserRequestDto, SendMoneyToUserRequestDto, UpdateUserDto } from './dto/user.dto'
+import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 
 export abstract class IUserRepository {
@@ -12,5 +12,6 @@ export abstract class IUserRepository {
   abstract updateUser(userId: number, data: UpdateUserDto): Promise<User | null>
   abstract deleteUser(userId: number): Promise<void>
   abstract getMostActiveUsers(params: MostActiveUserRequestDto): Promise<User[] | undefined>
-  abstract updateBalance(userId: number, newAmount: Decimal): Promise<void>
+  abstract transferBalance(payerId: number, payeeId: number, amount: Decimal): Promise<void>
+  abstract resetAllBalances(): Promise<number>
 }
