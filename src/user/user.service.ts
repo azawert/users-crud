@@ -1,19 +1,29 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { PaginatedResponse } from 'src/common/common.dto'
+import { RedisService } from 'src/providers/redis/redis.service'
 import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: IUserRepository) {}
+  constructor(
+    private readonly userRepository: IUserRepository,
+    private readonly redisService: RedisService,
+  ) {}
 
   async getByLogin(login: string) {
     return this.userRepository.findUserByLogin(login)
   }
 
   async getById(id: number) {
-    return this.userRepository.findUserById(id)
+    const userFromCache = await this.redisService.get<User>(`${id}`)
+    if (userFromCache) {
+      return userFromCache
+    }
+    const data = await this.userRepository.findUserById(id)
+    await this.redisService.set(`${id}`, data)
+    return data
   }
 
   async getByRefreshToken(refreshToken: string) {
@@ -27,7 +37,10 @@ export class UserService {
       throw new ConflictException()
     }
 
-    return this.userRepository.createUser(data)
+    const createdUser = await this.userRepository.createUser(data)
+    await this.redisService.set(`${createdUser.id}`, createdUser)
+
+    return createdUser
   }
 
   async updateRefreshToken(userId: number, token: string) {
@@ -51,6 +64,7 @@ export class UserService {
   }
 
   async deleteUser(id: number) {
+    await this.redisService.delete(`${id}`)
     return this.userRepository.deleteUser(id)
   }
 
@@ -59,6 +73,17 @@ export class UserService {
   }
 
   async getMostActiveUsers(params: MostActiveUserRequestDto) {
-    return this.userRepository.getMostActiveUsers(params)
+    const keyForRedis = 'users:active'
+    const cachedValue = await this.redisService.get(keyForRedis)
+    if (cachedValue !== null) {
+      return cachedValue
+    }
+
+    const response = await this.userRepository.getMostActiveUsers(params)
+    if (response) {
+      await this.redisService.set(keyForRedis, response)
+    }
+
+    return response
   }
 }

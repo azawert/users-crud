@@ -6,6 +6,7 @@ import { ERole } from 'src/common'
 import type { PaginationQueryDto } from 'src/common/common.dto'
 import { User } from './decorator/user.decorator'
 import type { MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
+import TUser from './user.entity'
 import { UserService } from './user.service'
 
 @Controller('user')
@@ -14,8 +15,8 @@ export class UserController {
 
   @UseGuards(JwtAccessGuard)
   @Get('me')
-  async getMe(@User('id') id: number) {
-    return this.userService.getById(id)
+  async getMe(@User() user: TUser) {
+    return user
   }
 
   @UseGuards(JwtAccessGuard)

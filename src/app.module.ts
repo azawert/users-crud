@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module'
 import { DatabaseModule } from './database/database.module'
 import { PhotoModule } from './photo/photo.module'
 import { FilesModule } from './providers/files.module'
+import { RedisModule } from './providers/redis/redis.module'
 import { S3Module } from './providers/s3/s3.module'
 import { UserModule } from './user/user.module'
 
@@ -16,6 +17,7 @@ import { UserModule } from './user/user.module'
     S3Module,
     FilesModule,
     PhotoModule,
+    RedisModule,
   ],
 })
 export class AppModule {}
