@@ -5,7 +5,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard'
 import { ERole } from 'src/common'
 import type { PaginationQueryDto } from 'src/common/common.dto'
 import { User } from './decorator/user.decorator'
-import type { UpdateUserDto } from './dto/user.dto'
+import type { MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import { UserService } from './user.service'
 
 @Controller('user')
@@ -44,7 +44,7 @@ export class UserController {
   @UseGuards(JwtAccessGuard)
   @Get('/active')
   @HttpCode(HttpStatus.OK)
-  async getMostActiveUsers() {
-    return await this.userService.getUsersWithAvatar()
+  async getMostActiveUsers(@Query() query: MostActiveUserRequestDto) {
+    return await this.userService.getMostActiveUsers(query)
   }
 }

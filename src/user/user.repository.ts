@@ -3,7 +3,7 @@ import { BaseRepository } from 'src/base'
 import { ACTIVE_USERS_PHOTO_COUNT } from 'src/common/constants'
 import { Photo } from 'src/photo/photo.entity'
 import { DataSource, EntityManager, Repository } from 'typeorm'
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
+import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 
@@ -115,7 +115,8 @@ export class UserRepository extends BaseRepository implements IUserRepository {
     await this.userRepository().softDelete({ id: userId })
   }
 
-  async getUsersWithAvatars(): Promise<User[] | undefined> {
+  async getMostActiveUsers(params: MostActiveUserRequestDto): Promise<User[] | undefined> {
+    const { maxAge, minAge } = params
     try {
       const users = await this.userRepository()
         .createQueryBuilder('user')
@@ -133,6 +134,8 @@ export class UserRepository extends BaseRepository implements IUserRepository {
         })
         .setParameter('count', ACTIVE_USERS_PHOTO_COUNT)
         .andWhere('user.description IS NOT NULL')
+        .andWhere('user.age >= :minAge', { minAge })
+        .andWhere('user.age <= :maxAge', { maxAge })
         .getMany()
 
       return users

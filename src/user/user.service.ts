@@ -1,6 +1,6 @@
 import { ConflictException, Injectable } from '@nestjs/common'
 import { PaginatedResponse } from 'src/common/common.dto'
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
+import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 import { IUserRepository } from './user-repository.interface'
 
@@ -58,7 +58,7 @@ export class UserService {
     return this.userRepository.updateUser(id, data)
   }
 
-  async getUsersWithAvatar() {
-    return this.userRepository.getUsersWithAvatars()
+  async getMostActiveUsers(params: MostActiveUserRequestDto) {
+    return this.userRepository.getMostActiveUsers(params)
   }
 }

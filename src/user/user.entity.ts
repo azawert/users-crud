@@ -1,7 +1,7 @@
 import { BaseEntity } from 'src/base'
 import { ERole, MAX_DESCRIPTION_LENGTH } from 'src/common'
 import { Photo } from 'src/photo/photo.entity'
-import { Column, DeleteDateColumn, Entity, OneToMany } from 'typeorm'
+import { Column, DeleteDateColumn, Entity, Index, OneToMany } from 'typeorm'
 
 @Entity()
 class User extends BaseEntity {
@@ -14,6 +14,7 @@ class User extends BaseEntity {
   @Column({ length: MAX_DESCRIPTION_LENGTH, nullable: true, type: 'char' })
   description: string
 
+  @Index()
   @Column()
   age: number
 

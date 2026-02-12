@@ -1,4 +1,4 @@
-import { CreateUserDto, UpdateUserDto } from './dto/user.dto'
+import { CreateUserDto, MostActiveUserRequestDto, UpdateUserDto } from './dto/user.dto'
 import User from './user.entity'
 
 export abstract class IUserRepository {
@@ -10,5 +10,5 @@ export abstract class IUserRepository {
   abstract findAllUsers(limit: number, page: number, includeDeleted?: boolean): Promise<[User[], number]>
   abstract updateUser(userId: number, data: UpdateUserDto): Promise<User | null>
   abstract deleteUser(userId: number): Promise<void>
-  abstract getUsersWithAvatars(): Promise<User[] | undefined>
+  abstract getMostActiveUsers(params: MostActiveUserRequestDto): Promise<User[] | undefined>
 }
