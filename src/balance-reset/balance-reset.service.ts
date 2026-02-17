@@ -39,7 +39,7 @@ export class BalanceResetService implements OnModuleInit {
         removeOnFail: 100,
       },
     )
-    this.logger.log(`Manual balance reset has been queued. id=${job.id}`)
+    this.logger.debug(`Manual balance reset has been queued. id=${job.id}`)
 
     return {
       jobId: job.id,
@@ -48,7 +48,7 @@ export class BalanceResetService implements OnModuleInit {
   }
 
   private async ensureRepeatableResetJob() {
-    this.logger.log('Ensuring repeatable balance reset job is scheduled')
+    this.logger.debug('Ensuring repeatable balance reset job is scheduled')
     const repeatableJob = await this.queue.add(
       BALANCE_RESET_JOB_NAME,
       {

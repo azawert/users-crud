@@ -1,6 +1,7 @@
 import * as AWS from '@aws-sdk/client-s3'
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
+import type { TConfigService } from 'src/common'
 import { S3Lib } from './constants/do-spaces-service-lib.constant'
 import { S3Service } from './s3.service'
 
@@ -10,9 +11,8 @@ import { S3Service } from './s3.service'
   providers: [
     S3Service,
     {
-      inject: [ConfigService],
       provide: S3Lib,
-      useFactory: async (configService: ConfigService) => {
+      useFactory: async (configService: TConfigService) => {
         return new AWS.S3({
           credentials: {
             accessKeyId: configService.getOrThrow('MINIO_ACCESS_KEY'),

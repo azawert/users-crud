@@ -1,3 +1,4 @@
+export { validateSchema } from './config'
 export {
   ACCEPTED_FILE_REGEX,
   ACCESS_TOKEN_EXPIRES_IN,
@@ -5,7 +6,10 @@ export {
   ACTIVE_USERS_PHOTO_COUNT,
   COOKIE_MAX_AGE,
   DEFAULT_PRECISION,
+  DEFAULT_RADIX,
+  DEFAULT_SALT,
   DEFAULT_SCALE,
+  DEFAULT_TTL_IN_SECONDS,
   JWT_ACCESS_STRATEGY_NAME,
   JWT_REFRESH_STRATEGY_NAME,
   MAX_DESCRIPTION_LENGTH,
@@ -13,4 +17,5 @@ export {
   REFRESH_TOKEN_EXPIRES_IN,
   REFRESH_TOKEN_SECRET_KEY,
 } from './constants'
-export { ERole } from './types'
+export { ERole, type TConfigService } from './types'
+export { comparePassword, hashPassword } from './utils'

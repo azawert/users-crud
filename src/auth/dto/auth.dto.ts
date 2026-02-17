@@ -1,4 +1,15 @@
-import { IsBoolean, IsEmail, IsNumber, IsOptional, IsString, IsStrongPassword, MaxLength } from 'class-validator'
+import { Type } from 'class-transformer'
+import {
+  IsBoolean,
+  IsEmail,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsStrongPassword,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator'
 import { MAX_DESCRIPTION_LENGTH, MIN_PASSWORD_LENGTH } from 'src/common'
 
 export class RegisterDto {
@@ -12,6 +23,9 @@ export class RegisterDto {
   password: string
 
   @IsNumber()
+  @Min(1)
+  @Max(110)
+  @Type(() => Number)
   age: number
 
   @IsOptional()
@@ -30,12 +44,4 @@ export class AuthenticationDto {
 
   @IsStrongPassword({ minLength: MIN_PASSWORD_LENGTH })
   password: string
-}
-
-export class TokensDto {
-  @IsString()
-  refreshToken: string
-
-  @IsString()
-  accessToken: string
 }

@@ -1,7 +1,6 @@
 import * as AWS from '@aws-sdk/client-s3'
 import { Inject, Injectable, Logger } from '@nestjs/common'
-import { ConfigService, ConfigType } from '@nestjs/config'
-
+import type { TConfigService } from 'src/common'
 import { IFileService } from '../files.adapter'
 import { S3Lib } from './constants/do-spaces-service-lib.constant'
 import { RemoveFilePayloadDto } from './dto/remove-file-payload.dto'
@@ -18,7 +17,7 @@ export class S3Service extends IFileService {
 
   constructor(
     @Inject(S3Lib) private readonly S3: AWS.S3,
-    private readonly configService: ConfigService,
+    private readonly configService: TConfigService,
   ) {
     super()
 

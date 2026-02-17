@@ -1,16 +1,15 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
 import { Request } from 'express'
 import { ExtractJwt, Strategy } from 'passport-jwt'
-import { JWT_REFRESH_STRATEGY_NAME, REFRESH_TOKEN_SECRET_KEY } from 'src/common'
+import { JWT_REFRESH_STRATEGY_NAME, REFRESH_TOKEN_SECRET_KEY, type TConfigService } from 'src/common'
 import User from 'src/user/user.entity'
 import { UserService } from 'src/user/user.service'
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, JWT_REFRESH_STRATEGY_NAME) {
   constructor(
     private readonly userService: UserService,
-    readonly configService: ConfigService,
+    readonly configService: TConfigService,
   ) {
     super({
       ignoreExpiration: false,

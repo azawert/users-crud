@@ -1,19 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
 import Redis, { Redis as RedisClient } from 'ioredis'
+import { DEFAULT_RADIX, DEFAULT_TTL_IN_SECONDS, type TConfigService } from 'src/common'
 
-const defaultRadix = 10
-const defaultTtlInSeconds = 30
 @Injectable()
 export class RedisService {
   private client: RedisClient
   private readonly logger: Logger = new Logger(RedisService.name)
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(private readonly configService: TConfigService) {
     this.client = new Redis({
       host: '127.0.0.1',
       password: this.configService.getOrThrow<string>('REDIS_PASSWORD'),
-      port: parseInt(this.configService.getOrThrow<string>('REDIS_PORT'), defaultRadix),
+      port: parseInt(this.configService.getOrThrow<string>('REDIS_PORT'), DEFAULT_RADIX),
     })
   }
 
@@ -34,7 +32,7 @@ export class RedisService {
     return null
   }
 
-  public async set<T>(key: string, value: T, ttlSeconds = defaultTtlInSeconds) {
+  public async set<T>(key: string, value: T, ttlSeconds = DEFAULT_TTL_IN_SECONDS) {
     const stringifiedData = JSON.stringify(value)
 
     await this.client.set(key, stringifiedData, 'EX', ttlSeconds)

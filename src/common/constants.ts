@@ -17,3 +17,8 @@ export const ACTIVE_USERS_PHOTO_COUNT = 2
 
 export const DEFAULT_PRECISION = 10
 export const DEFAULT_SCALE = 2
+
+export const DEFAULT_SALT = 10
+
+export const DEFAULT_RADIX = 10
+export const DEFAULT_TTL_IN_SECONDS = 30

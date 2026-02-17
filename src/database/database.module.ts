@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { TConfigService } from 'src/common'
 import { Photo } from 'src/photo/photo.entity'
 import User from 'src/user/user.entity'
 import { DataSource } from 'typeorm'
 import { addTransactionalDataSource } from 'typeorm-transactional'
 
-const defaultRadix = 10
-
-// database.module.ts
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
@@ -22,13 +20,12 @@ const defaultRadix = 10
 
         try {
           return addTransactionalDataSource(dataSource)
-        } catch (error) {
+        } catch (_error) {
           return dataSource
         }
       },
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: TConfigService) => ({
         database: configService.get('DB_NAME'),
         entities: [User, Photo],
         host: configService.get('DB_HOST'),

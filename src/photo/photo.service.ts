@@ -1,21 +1,21 @@
 import { BadRequestException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { DEFAULT_RADIX, type TConfigService } from 'src/common'
 import { S3Service } from 'src/providers/s3/s3.service'
 import { PhotoRepository } from './photo.repository'
-
-const MAX_PHOTOS_COUNT = 5
 
 @Injectable()
 export class PhotoService {
   private readonly photoFolder
+  private readonly maxPhotoCount
   private readonly logger = new Logger(PhotoService.name)
 
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: TConfigService,
     private readonly s3Service: S3Service,
     private readonly photoRepo: PhotoRepository,
   ) {
     this.photoFolder = this.configService.getOrThrow<string>('PHOTO_FOLDER')
+    this.maxPhotoCount = parseInt(this.configService.getOrThrow('MAX_PHOTOS_COUNT'), DEFAULT_RADIX)
     this.logger.log('PhotoService init')
   }
 
@@ -24,7 +24,7 @@ export class PhotoService {
       const isPhotoUploadAvailable = await this.isPhotoUploadAvailable(userId)
 
       if (!isPhotoUploadAvailable) {
-        this.logger.error(`User with id: ${userId}, reached max photos count: ${MAX_PHOTOS_COUNT}`)
+        this.logger.error(`User with id: ${userId}, reached max photos count: ${this.maxPhotoCount}`)
         throw new BadRequestException('Maximum avatars reached')
       }
       const fileName = this.generateFilename(photo.originalname)
@@ -68,10 +68,10 @@ export class PhotoService {
     }
   }
 
-  private async isPhotoUploadAvailable(userId: number): Promise<boolean> {
+  public async isPhotoUploadAvailable(userId: number): Promise<boolean> {
     const activePhotos = await this.photoRepo.countAvatarsByUserId(userId)
 
-    return activePhotos < MAX_PHOTOS_COUNT
+    return activePhotos < this.maxPhotoCount
   }
 
   private generateFilename(originalName: string): string {

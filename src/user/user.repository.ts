@@ -189,10 +189,10 @@ export class UserRepository extends BaseRepository implements IUserRepository {
           throw new BadRequestException('Insufficient payer balance')
         }
 
-        payer.balance = payerBalance.minus(amount)
-        payee.balance = payeeBalance.plus(amount)
-
-        await this.userRepository(manager).save([payer, payee])
+        await this.userRepository(manager).save([
+          { ...payer, balance: payerBalance.minus(amount) },
+          { ...payee, balance: payeeBalance.plus(amount) },
+        ])
       })
     } catch (e) {
       this.logger.error('Error while transferring balance', e)

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { AuthModule } from './auth/auth.module'
 import { BalanceResetModule } from './balance-reset/balance-reset.module'
+import { validateSchema } from './common'
 import { DatabaseModule } from './database/database.module'
 import { PhotoModule } from './photo/photo.module'
 import { FilesModule } from './providers/files.module'
@@ -11,7 +12,7 @@ import { UserModule } from './user/user.module'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateSchema }),
     AuthModule,
     BalanceResetModule,
     DatabaseModule,
