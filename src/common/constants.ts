@@ -11,3 +11,14 @@ export const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
 
 export const JWT_REFRESH_STRATEGY_NAME = 'jwt-refresh'
 export const JWT_ACCESS_STRATEGY_NAME = 'jwt-access'
+
+export const ACCEPTED_FILE_REGEX = /^image\/(png|jpeg)$/
+export const ACTIVE_USERS_PHOTO_COUNT = 2
+
+export const DEFAULT_PRECISION = 10
+export const DEFAULT_SCALE = 2
+
+export const DEFAULT_SALT = 10
+
+export const DEFAULT_RADIX = 10
+export const DEFAULT_TTL_IN_SECONDS = 30
